@@ -3,7 +3,13 @@
   export let className = null;
 </script>
 
-<svg class="node" x={node.x} y={node.y} width={node.width} height={node.height}>
+<svg
+  class="node"
+  x={node.x}
+  y={node.y}
+  width={node.width}
+  height={node.height}
+  on:click={() => console.log(node)}>
   <rect class="node--inner" x="0" y="0" width="100%" height="100%" />
   <rect
     class="rectangle"

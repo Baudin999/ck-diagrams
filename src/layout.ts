@@ -1,4 +1,5 @@
 import { NumericLiteral, formatDiagnostic } from "typescript";
+import { fix_and_outro_and_destroy_block } from "svelte/internal";
 
 let rankHeight = 100;
 let nodeHeight = 80;
@@ -15,7 +16,7 @@ export class Layout {
     y: number;
     width: number;
     height: number;
-    rank: number = 0;
+    rank: number = -1;
     laneRank: number = 0;
     laneTop: number = 30;
     laneFooter: number = 10;
@@ -28,8 +29,11 @@ export class Layout {
 
         this.parseLanes(this.originalNodes);
         this.parseNodes(this.originalNodes, true);
+        this.positionNodes(this.nodes);
         this.parseEdges(this.nodes);
         this.calculateDimentions();
+
+        console.log(this._lanes)
 
         this.x = 0;
         this.y = 0;
@@ -52,22 +56,71 @@ export class Layout {
 
     private parseNodes(ns: INodeDefinition[], push: boolean): INode[] {
         return ns.map((node, i) => {
+            this.rank++;
             let key = node.in?.toLowerCase() || "default";
             let lane = this._lanes[key];
             let n = this.creatNode(node, lane);
-            this.rank++;
 
-            lane.nodes.push(n);
             if (push) this.nodes.push(n);
 
-            if (node.nodes && node.nodes.length > 0) {
-                n.nodes = this.parseNodes(node.nodes, false);
+
+            // sort the nodes 
+            var defs = (node.nodes || []).sort((a, b) => (a.nodes || []).length - (b.nodes || []).length);
+
+            if (n.type === NodeTypes.Choice) {
+
+                var r = defs.map(d => {
+                    var result = this.parseNodes([d], false);
+                    this.rank--;
+                    return result[0];
+                });
+                n.nodes = r;
+
+                let indexes = {};
+                let y = n.nodes[0].y;
+
+                n.nodes.forEach((_node, i) => {
+
+                    if (!indexes[_node.lane.id]) {
+                        indexes[_node.lane.id] = 1;
+                        _node.rank = 0;
+                    }
+                    else {
+                        indexes[_node.lane.id]++;
+                        _node.rank = indexes[_node.lane.id] - 1;
+                        _node.lane.width += laneWidth;
+
+                        Object
+                            .keys(this._lanes)
+                            .map(key => this._lanes[key])
+                            .filter(l => l.index > _node.lane.index)
+                            .forEach(l => l.x += laneWidth);
+                    }
+
+                    _node.y = y;
+                    _node.x = (indexes[_node.lane.id] - 1) * laneWidth + _node.lane.x;
+                });
+                this.rank++;
+            }
+            else {
+                n.nodes = this.parseNodes(defs, false);
             }
 
             return n;
         });
 
+    }
 
+    private positionNodes(nodes: INode[]) {
+        nodes.forEach(n => {
+            n.x = n.lane.x + (n.rank * laneWidth);
+            var { top, right, bottom, left } = this.calculatePostions(n);
+            n.top = top;
+            n.right = right;
+            n.bottom = bottom;
+            n.left = left;
+            this.positionNodes(n.nodes);
+        })
     }
 
     private parseEdges(ns: INode[], _to?: INode) {
@@ -79,14 +132,7 @@ export class Layout {
 
             if (from.type === NodeTypes.Choice) {
 
-                var root = from.nodes[0];
                 from.nodes.forEach(child => {
-                    child.y = root.y;
-                    var postions = this.calculatePostions(child);
-                    child.top = postions.top;
-                    child.right = postions.right;
-                    child.bottom = postions.bottom;
-                    child.left = postions.left;
 
                     this.edges.push(this.createLine(from.bottom, child.top));
 
@@ -108,6 +154,15 @@ export class Layout {
         return exit;
     }
 
+    private moveNodes(nodes: INode[], laneId: string) {
+        nodes
+            .filter(n => n.lane.id !== laneId)
+            .forEach(n => {
+                n.x += laneWidth;
+                this.moveNodes(n.nodes, laneId);
+            });
+    }
+
     private calculateDimentions() {
         let rank = 0;
         let height;
@@ -127,13 +182,17 @@ export class Layout {
                 return lane;
             });
 
+        this.height = this.nodes.reduce((height, next) => {
+            if (next.y + next.height > height) return height = next.y + next.height;
+            else return height;
+        }, 0)
+
         this.lanes = lanes;
-        this.height = height;
-        this.width = this.lanes.length * 200;
+        this.width = this.lanes.reduce((acc, lane) => lane.width + acc, 0);
     }
 
     private creatNode(n: INodeDefinition, lane: ILane): INode {
-        let x = 0; //lane.x;
+        let x = lane.x;
         let y = lane.rankHeight * this.rank + lane.laneTop;
         let width = lane.width;
         let height = nodeHeight;
@@ -153,24 +212,25 @@ export class Layout {
             height,
             padding,
             margin: 0,
-            top: { x: width / 2 + x + lane.x, y: 0 + y + padding },
-            right: { x: width + x - padding + lane.x, y: height / 2 + y },
-            bottom: { x: width / 2 + x + lane.x, y: height + y - padding },
-            left: { x: 0 + x + padding + lane.x, y: height / 2 + y },
+            top: { x: width / 2 + x, y: 0 + y + padding },
+            right: { x: width + x - padding, y: height / 2 + y },
+            bottom: { x: width / 2 + x, y: height + y - padding },
+            left: { x: 0 + x + padding, y: height / 2 + y },
             type: parseType(n.type),
             in: n.in,
             nodes: [],
             rank: lane.nodes.length,
-            lane
+            lane,
+            row: this.rank
         };
     }
 
     private calculatePostions(n: INode) {
         return {
-            top: { x: n.width / 2 + n.x + n.lane.x, y: 0 + n.y + n.padding },
-            right: { x: n.width + n.x - n.padding + n.lane.x, y: n.height / 2 + n.y },
-            bottom: { x: n.width / 2 + n.x + n.lane.x, y: n.height + n.y - n.padding },
-            left: { x: 0 + n.x + n.padding + n.lane.x, y: n.height / 2 + n.y },
+            top: { x: n.width / 2 + n.x, y: 0 + n.y + n.padding },
+            right: { x: n.width + n.x - n.padding, y: n.height / 2 + n.y },
+            bottom: { x: n.width / 2 + n.x, y: n.height + n.y - n.padding },
+            left: { x: 0 + n.x + n.padding, y: n.height / 2 + n.y },
         };
     }
 
@@ -187,7 +247,8 @@ export class Layout {
             laneTop: this.laneTop,
             laneFooter: this.laneFooter,
             rankHeight,
-            nodes: []
+            nodes: [],
+            rank: 0
         };
     }
 
@@ -195,7 +256,7 @@ export class Layout {
         let id = Math.random().toString(36).substring(7);
         let otherPoinst = [];
         if (p1.x !== p2.x) {
-            let y = p1.y + ((p2.y - p1.y) / 2);
+            let y = p2.y - 20;
             otherPoinst.push({ x: p1.x, y });
             otherPoinst.push({ x: p2.x, y });
         }
@@ -213,7 +274,8 @@ const defaultLane: ILane = {
     width: laneWidth,
     x: 0,
     nodes: [],
-    id: "___"
+    id: "___",
+    rank: 0
 }
 
 const parseType = t => {
@@ -256,7 +318,7 @@ export interface ILane {
     laneTop: number;
     laneFooter: number;
     rankHeight: number;
-
+    rank: number;
     nodes: INode[];
 }
 
@@ -282,6 +344,7 @@ interface INode {
 
     nodes?: INode[];
     lane: ILane;
+    row: number;
 }
 
 

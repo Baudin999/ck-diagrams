@@ -16,3 +16,6 @@
 {:else}
   <Rect {node} />
 {/if}
+{#each node.nodes as n}
+  <svelte:self node={n} />
+{/each}

@@ -8,14 +8,15 @@ export const nodes = [
                     { id: "robin", label: "Robin Kelkboom", in: "Children" },
                     { id: "sam", label: "Sam Kelkboom", in: "Children" },
                     {
-                        id: "lief", label: "Zijn ze lief?", in: "Children", type: "choice", nodes: [
-                            { id: "ja", in: "Children", label: "Ja" },
-                            { id: "nee", in: "Spouses", label: "Nee" },
+                        id: "lief", label: "Zijn ze lief?", in: "Calculate", type: "choice", nodes: [
+                            { id: "ja", in: "Calculate", label: "Ja" },
+                            { id: "nee", in: "Calculate", label: "Nee" },
                         ]
                     },
                 ]
             },
-            { id: "notMarried", label: "Nope", value: false }
+            { id: "notMarried", label: "Nope", value: false },
+            { id: "notFun", label: "Not fun", value: false, in: "Other" },
         ]
     },
 

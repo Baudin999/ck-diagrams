@@ -52,4 +52,7 @@
   {#each layout.lanes as lane}
     <Lane {lane} />
   {/each}
+  {#each layout.nodes as node}
+    <Node {node} />
+  {/each}
 </svg>
