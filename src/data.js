@@ -16,10 +16,13 @@ export const nodes = [
                 ]
             },
             { id: "notMarried", label: "Nope", value: false },
-            { id: "notFun", label: "Not fun", value: false, in: "Other" },
         ]
     },
 
 ];
 
 
+export const getCustomer = [
+    { id: "datastore", label: "Database", type: "database" },
+    { id: "datastore2", label: "Other Database", in: "Integration", type: "database" },
+];

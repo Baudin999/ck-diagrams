@@ -226,12 +226,22 @@ export class Layout {
     }
 
     private calculatePostions(n: INode) {
-        return {
-            top: { x: n.width / 2 + n.x, y: 0 + n.y + n.padding },
-            right: { x: n.width + n.x - n.padding, y: n.height / 2 + n.y },
-            bottom: { x: n.width / 2 + n.x, y: n.height + n.y - n.padding },
-            left: { x: 0 + n.x + n.padding, y: n.height / 2 + n.y },
-        };
+        if (n.type === "database") {
+            return {
+                top: { x: n.width / 2 + n.x, y: -5 + n.y + n.padding },
+                right: { x: n.width + n.x - n.padding, y: n.height / 2 + n.y },
+                bottom: { x: n.width / 2 + n.x, y: n.height + n.y - n.padding },
+                left: { x: 0 + n.x + n.padding, y: n.height / 2 + n.y },
+            };
+        }
+        else {
+            return {
+                top: { x: n.width / 2 + n.x, y: 0 + n.y + n.padding },
+                right: { x: n.width + n.x - n.padding, y: n.height / 2 + n.y },
+                bottom: { x: n.width / 2 + n.x, y: n.height + n.y - n.padding },
+                left: { x: 0 + n.x + n.padding, y: n.height / 2 + n.y },
+            };
+        }
     }
 
     private createLane(id: string, label: string): ILane {
@@ -287,6 +297,9 @@ const parseType = t => {
     }
     else if (t === "choice") {
         return NodeTypes.Choice;
+    }
+    else if (t === "database") {
+        return NodeTypes.Database;
     }
     else {
         return NodeTypes.Normal;

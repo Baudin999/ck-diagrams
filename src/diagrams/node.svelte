@@ -1,6 +1,7 @@
 <script>
   import Rect from "./rect.svelte";
   import Circle from "./circle.svelte";
+  import Database from "./database.svelte";
   import Rhombus from "./rhombus.svelte";
   export let node;
 </script>
@@ -11,6 +12,8 @@
   <Circle {node} />
 {:else if node.type === 'stop'}
   <Circle {node} />
+{:else if node.type === 'database'}
+  <Database {node} />
 {:else if node.type === 'choice'}
   <Rhombus {node} />
 {:else}

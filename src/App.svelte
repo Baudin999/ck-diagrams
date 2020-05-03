@@ -1,11 +1,11 @@
 <script>
-  import { nodes } from "./data";
+  import { nodes, getCustomer } from "./data";
   import { Layout } from "./layout.ts";
   import Node from "./diagrams/node.svelte";
   import Line from "./diagrams/line.svelte";
   import Lane from "./diagrams/lane.svelte";
 
-  let layout = new Layout(nodes);
+  let layout = new Layout(getCustomer);
 </script>
 
 <style>
