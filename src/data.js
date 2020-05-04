@@ -24,5 +24,5 @@ export const nodes = [
 
 export const getCustomer = [
     { id: "datastore", label: "Database", type: "database" },
-    { id: "datastore2", label: "Other Database", in: "Integration", type: "database" },
+    { id: "process1", label: "My Process", in: "Integration", type: "subprocess" },
 ];

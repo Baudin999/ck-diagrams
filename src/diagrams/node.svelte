@@ -3,6 +3,7 @@
   import Circle from "./circle.svelte";
   import Database from "./database.svelte";
   import Rhombus from "./rhombus.svelte";
+  import Subprocess from "./subprocess.svelte";
   export let node;
 </script>
 
@@ -16,6 +17,8 @@
   <Database {node} />
 {:else if node.type === 'choice'}
   <Rhombus {node} />
+{:else if node.type === 'subprocess'}
+  <Subprocess {node} />
 {:else}
   <Rect {node} />
 {/if}

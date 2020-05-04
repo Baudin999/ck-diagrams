@@ -28,6 +28,7 @@
   :global(.node) {
     /* opacity: 0; */
   }
+
   :global(.node .node--inner) {
     opacity: 0;
   }

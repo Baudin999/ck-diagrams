@@ -25,7 +25,8 @@ export class Layout {
         this.originalNodes = originalNodes;
         this.originalNodes.unshift({ id: "start", label: "Start", type: "start" });
         this.originalNodes = originalNodes;
-        this.originalNodes.push({ id: "stop", label: "Stop", type: "stop" });
+        var endIn = originalNodes[originalNodes.length - 1].in;
+        this.originalNodes.push({ id: "stop", label: "Stop", type: "stop", in: endIn });
 
         this.parseLanes(this.originalNodes);
         this.parseNodes(this.originalNodes, true);
@@ -300,6 +301,9 @@ const parseType = t => {
     }
     else if (t === "database") {
         return NodeTypes.Database;
+    }
+    else if (t === "subprocess") {
+        return NodeTypes.Subprocess;
     }
     else {
         return NodeTypes.Normal;
